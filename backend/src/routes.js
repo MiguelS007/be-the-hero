@@ -4,8 +4,17 @@ const OngController = require('./controllers/OngController');
 const IncidentController = require('./controllers/IncidentController');
 const ProfileController = require('./controllers/ProfileController');
 const SessionController = require('./controllers/SessionController');
+const buildHealthModule = require('./health');
+const dbConnection = require('./database/connection');
 
 const routes = express.Router();
+
+// --- Health probes (US-005 / T001-BE) ---
+// No authentication: load balancers and orchestrators need to probe freely.
+// Liveness: cheap, in-process. Readiness: deep, checks dependencies.
+const { controller: healthController } = buildHealthModule({ dbConnection });
+routes.get('/health', healthController.liveness);
+routes.get('/health/ready', healthController.readiness);
 
 routes.post('/sessions', SessionController.create);
 
